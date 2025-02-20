@@ -72,6 +72,7 @@ export default function SelectLanguage({
                   <PopoverTrigger asChild>
                     <FormControl>
                       <Button
+                        aria-label='select language'
                         variant='outline'
                         role='combobox'
                         className={cn(
@@ -129,6 +130,7 @@ export default function SelectLanguage({
             )}
           />
           <Button
+            aria-label='translate'
             disabled={
               loadingState.translator === messageId ||
               loadingState.summarizer !== null ||

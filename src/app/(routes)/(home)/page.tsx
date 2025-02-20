@@ -98,6 +98,7 @@ export default function Home() {
         </p>
         <Link href='/chat' prefetch={false}>
           <Button
+            aria-label='get started'
             size='lg'
             className='rounded-full font-bold hover:bg-primary/80'
           >

@@ -108,9 +108,10 @@ export default function ChatPage() {
                         confidence={chat.confidence}
                         scroll={scrollToBottom}
                       />
-                      {chat.content.length >= 150 &&
+                      {chat.content.length > 150 &&
                         convertLanguage(chat.sourceLanguage) === 'English' && (
                           <Button
+                            aria-label='summarize'
                             className='w-full'
                             onClick={() => {
                               summarizeText(
@@ -205,6 +206,7 @@ export default function ChatPage() {
               )}
             />
             <Button
+              aria-label='submit'
               disabled={
                 loadingState.summarizer !== null ||
                 loadingState.translator !== null ||
