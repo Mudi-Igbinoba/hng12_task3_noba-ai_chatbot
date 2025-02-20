@@ -2,7 +2,6 @@
 
 import { Button } from '@/components/ui/button';
 import { modak } from '@/lib/fonts';
-import { isChrome } from '@/lib/utils';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -17,12 +16,12 @@ import {
 } from '@/components/ui/alert-dialog';
 import { AlertCircle } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger
-} from '@/components/ui/tooltip';
+// import {
+//   Tooltip,
+//   TooltipContent,
+//   TooltipProvider,
+//   TooltipTrigger
+// } from '@/components/ui/tooltip';
 
 export default function Home() {
   const [showAlert, setShowAlert] = useState(true);
