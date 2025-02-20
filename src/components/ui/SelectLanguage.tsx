@@ -1,13 +1,5 @@
 import { languagesSchema } from '@/lib/schema';
-import {
-  Form,
-  FormControl,
-  // FormDescription,
-  FormField,
-  FormItem
-  // FormLabel,
-  // FormMessage
-} from './form';
+import { Form, FormControl, FormField, FormItem, FormLabel } from './form';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -38,39 +30,36 @@ export default function SelectLanguage({
   messageId,
   content,
   sourceLang,
-
-  confidence
+  confidence,
+  scroll
 }: {
   messageId: string;
   content: string;
   sourceLang: string;
-
   confidence: number;
+  scroll: () => void;
 }) {
   const chatContext = useContext(ChatContext);
 
   if (!chatContext) throw new Error('ChatContext is missing!');
 
-  const {
-    translateMessage,
-
-    loadingState
-  } = chatContext;
+  const { translateMessage, loadingState } = chatContext;
   const form = useForm<z.infer<typeof languagesSchema>>({
     resolver: zodResolver(languagesSchema)
   });
 
+  const langInput = form.watch('language');
+
   function onSubmit(data: z.infer<typeof languagesSchema>) {
     translateMessage(messageId, content, sourceLang, data.language, confidence);
-    // handleSubmit();
   }
 
   return (
-    <div className='ml-auto'>
+    <div className='ml-auto '>
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className='flex gap-x-2.5 items-center'
+          className='flex lg:flex-row flex-col gap-2.5 lg:items-center'
         >
           <FormField
             control={form.control}
@@ -78,7 +67,7 @@ export default function SelectLanguage({
             disabled={loadingState.translator === messageId}
             render={({ field }) => (
               <FormItem className='flex flex-col'>
-                {/* <FormLabel>Language</FormLabel> */}
+                <FormLabel hidden>Language</FormLabel>
                 <Popover>
                   <PopoverTrigger asChild>
                     <FormControl>
@@ -86,7 +75,7 @@ export default function SelectLanguage({
                         variant='outline'
                         role='combobox'
                         className={cn(
-                          'w-[200px] justify-between',
+                          'lg:w-[200px] justify-between',
                           !field.value && 'text-muted-foreground'
                         )}
                       >
@@ -136,16 +125,21 @@ export default function SelectLanguage({
                     </Command>
                   </PopoverContent>
                 </Popover>
-                {/* <FormDescription>
-                  This is the language that will be used in the dashboard.
-                </FormDescription> */}
-                {/* <FormMessage /> */}
               </FormItem>
             )}
           />
           <Button
-            disabled={loadingState.translator === messageId}
+            disabled={
+              loadingState.translator === messageId ||
+              loadingState.summarizer !== null ||
+              !langInput
+            }
             type='submit'
+            onClick={() => {
+              if (loadingState.translator !== messageId) {
+                scroll();
+              }
+            }}
           >
             {loadingState.translator === messageId
               ? 'Translating...'

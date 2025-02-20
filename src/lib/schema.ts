@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const formSchema = z.object({
-  text: z.string().min(2, { message: 'Try writing a longer text' })
+  text: z.string().min(2, { message: 'You have to input a text' })
 });
 
 export const languagesSchema = z.object({

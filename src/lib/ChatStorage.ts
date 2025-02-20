@@ -103,13 +103,13 @@ export async function addMessageToStorage(role: string, content: string) {
       : 0;
 
   const newMessage = {
-    id: uuidv4(), // Unique message ID
+    id: uuidv4(),
     role,
     content,
-    sourceLanguage: detectedLanguage, // Store detected language as the source
+    sourceLanguage: detectedLanguage,
     timestamp,
     confidence,
-    aiResponses: [] // Array for AI-generated translations/summaries
+    aiResponses: []
   };
 
   chatHistory.push(newMessage);

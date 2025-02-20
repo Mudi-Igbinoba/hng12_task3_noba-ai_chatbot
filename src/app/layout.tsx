@@ -28,7 +28,7 @@ export default function RootLayout({
         <meta httpEquiv='origin-trial' content={process.env.TRANSLATOR_TOKEN} />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${monty.className} antialiased min-h-screen `}
+        className={`${geistSans.variable} ${geistMono.variable} ${monty.className} antialiased max-h-screen flex flex-col`}
       >
         <ThemeProvider
           attribute='class'
@@ -38,7 +38,7 @@ export default function RootLayout({
         >
           <ChatProvider>
             <Navbar />
-            <main className='h-screen'>{children}</main>
+            <main className='flex-1'>{children}</main>
           </ChatProvider>
         </ThemeProvider>
       </body>

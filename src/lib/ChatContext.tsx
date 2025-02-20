@@ -47,7 +47,6 @@ interface ChatContextType {
   // translatedText: string;
   loadingState: {
     summarizer: string | null; // Stores message ID being summarized
-    languageDetector: string | null; // Stores message ID being detected
     translator: string | null; // Stores message ID being translated
   };
 }

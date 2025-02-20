@@ -16,12 +16,6 @@ import {
 } from '@/components/ui/alert-dialog';
 import { AlertCircle } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-// import {
-//   Tooltip,
-//   TooltipContent,
-//   TooltipProvider,
-//   TooltipTrigger
-// } from '@/components/ui/tooltip';
 
 export default function Home() {
   const [showAlert, setShowAlert] = useState(true);
