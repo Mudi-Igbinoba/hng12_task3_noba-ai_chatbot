@@ -11,7 +11,7 @@ import {
 import { ModeToggle } from './mode-toggle';
 import { modak } from '@/lib/fonts';
 import { usePathname } from 'next/navigation';
-import { cn, isChrome } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -36,20 +36,18 @@ export default function Navbar() {
           </NavigationMenuItem>
 
           <NavigationMenuItem>
-            {isChrome() && (
-              <Link href='/chat' legacyBehavior passHref>
-                <NavigationMenuLink
-                  className={cn(
-                    `${navigationMenuTriggerStyle()} hover:bg-primary/80 dark:hover:bg-primary hover:text-white font-bold`,
-                    {
-                      'border-b-2 border-b-primary': pathname === '/chat'
-                    }
-                  )}
-                >
-                  Chat
-                </NavigationMenuLink>
-              </Link>
-            )}
+            <Link href='/chat' legacyBehavior passHref>
+              <NavigationMenuLink
+                className={cn(
+                  `${navigationMenuTriggerStyle()} hover:bg-primary/80 dark:hover:bg-primary hover:text-white font-bold`,
+                  {
+                    'border-b-2 border-b-primary': pathname === '/chat'
+                  }
+                )}
+              >
+                Chat
+              </NavigationMenuLink>
+            </Link>
           </NavigationMenuItem>
         </NavigationMenuList>
       </NavigationMenu>

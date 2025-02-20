@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { ThemeProvider } from '@/components/ui/theme-provider';
-import { NotistackProvider } from '@/components/ui/SnackbarProviderClient';
 import { ChatProvider } from '@/lib/ChatContext';
 import Navbar from '@/components/ui/Navbar';
 import { geistMono, geistSans, monty } from '@/lib/fonts';
@@ -37,12 +36,10 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <NotistackProvider>
-            <ChatProvider>
-              <Navbar />
-              <main className='h-screen'>{children}</main>
-            </ChatProvider>
-          </NotistackProvider>
+          <ChatProvider>
+            <Navbar />
+            <main className='h-screen'>{children}</main>
+          </ChatProvider>
         </ThemeProvider>
       </body>
     </html>
