@@ -45,16 +45,27 @@ export function getChatHistory() {
 export async function detectLanguage(text: string) {
   if (!window?.ai?.languageDetector) return [];
 
-  const detector = await window.ai.languageDetector.create();
-  const results = await detector.detect(text);
+  console.log('Checking Language Detector...');
 
-  // Return an array of detected languages with confidence scores
-  return results.map(
-    (result: { detectedLanguage: string; confidence: number }) => ({
-      detectedLanguage: result.detectedLanguage,
-      confidence: result.confidence
-    })
-  );
+  try {
+    const capabilities = await window.ai.languageDetector.capabilities();
+    if (!capabilities?.available || capabilities.available === 'no') {
+      console.log('Language Detector: Not available');
+      return [];
+    }
+
+    // Create the detector (only once)
+    const detector = await window.ai.languageDetector.create();
+    const results = await detector.detect(text);
+
+    return results.map(({ detectedLanguage, confidence }) => ({
+      detectedLanguage,
+      confidence
+    }));
+  } catch (error) {
+    console.error('Error in language detection:', error);
+    return [];
+  }
 }
 
 // Function to translate text
@@ -63,12 +74,55 @@ export async function translateText(
   sourceLanguage: string,
   targetLanguage: string
 ) {
-  if (!window?.ai?.translator || !sourceLanguage) return text;
-  const translator = await window.ai.translator.create({
-    sourceLanguage,
-    targetLanguage
-  });
-  return await translator.translate(text);
+  if (!window?.ai?.translator) {
+    console.log('Translator unavailable.');
+    return text;
+  }
+
+  console.log(`Checking Translator...`);
+
+  try {
+    const capabilities = await window.ai.translator.capabilities();
+    if (!capabilities?.available || capabilities.available === 'no') {
+      console.log('Translator: Not available');
+      return text;
+    }
+
+    let translator;
+
+    if (capabilities.available === 'readily') {
+      console.log('Translator is ready.');
+      translator = await window.ai.translator.create({
+        sourceLanguage,
+        targetLanguage
+      });
+    } else {
+      console.log('Downloading Translator model...');
+      translator = await window.ai.translator.create({
+        sourceLanguage,
+        targetLanguage,
+        monitor(m) {
+          m.addEventListener(
+            'downloadprogress',
+            (e: { loaded: number; total: number }) => {
+              console.log(`Translator: ${e.loaded} out of ${e.total}`);
+            }
+          );
+        }
+      });
+
+      await translator?.ready;
+    }
+
+    console.log(`Translating from ${sourceLanguage} to ${targetLanguage}...`);
+    const translatedText = await translator.translate(text);
+    console.log(`Translation complete: ${translatedText}`);
+
+    return translatedText;
+  } catch (error) {
+    console.error('Error in translation:', error);
+    return text; // Return original text if translation fails
+  }
 }
 
 // Function to translate text
@@ -79,12 +133,24 @@ export async function summarizeText(text: string) {
     format: 'plain-text',
     length: 'medium'
   };
+
   if (!window?.ai?.summarizer) return text;
 
-  const translator = await window.ai.summarizer.create(options);
-  return await translator.summarize(text, {
-    context: ''
-  });
+  console.log('Checking Summarizer...');
+
+  try {
+    const capabilities = await window.ai.summarizer.capabilities();
+    if (!capabilities?.available || capabilities.available === 'no') {
+      console.log('Summarizer: Not available');
+      return text;
+    }
+
+    const summarizer = await window.ai.summarizer.create(options);
+    return await summarizer.summarize(text, { context: '' });
+  } catch (error) {
+    console.error('Error in summarization:', error);
+    return text;
+  }
 }
 
 // Function to add a new message to chat history with processing
@@ -124,61 +190,70 @@ export async function addAiResponseToMessage(
   const timestamp = new Date().toISOString();
 
   const message = chatHistory.find(
-    (msg: {
-      id: string;
-      role: string;
-      content: string;
-      sourceLanguage: string;
-      timestamp: string;
-      confidence: number;
-      aiResponses?: AIResponseType[];
-    }) => msg.id === messageId
+    (msg: { id: string }) => msg.id === messageId
   );
-
   if (!message) {
     console.error('Message not found.');
     return;
   }
 
-  // Initialize aiResponses if missing
+  // Ensure aiResponses exists
   message.aiResponses ??= [];
 
-  // Process AI response
-  let changedText;
-  if (aiResponse.type === 'translation') {
-    changedText = await translateText(
-      aiResponse.content,
-      aiResponse.sourceLanguage,
-      aiResponse.targetLanguage
-    );
-  } else {
-    changedText = await summarizeText(aiResponse.content);
+  try {
+    // Process AI response (translation or summary)
+    let changedText;
+    if (aiResponse.type === 'translation') {
+      changedText = await translateText(
+        aiResponse.content,
+        aiResponse.sourceLanguage,
+        aiResponse.targetLanguage
+      );
+    } else {
+      changedText = await summarizeText(aiResponse.content);
+    }
+
+    // Detect language of AI response
+    const detectedResults = await detectLanguage(changedText);
+    const detectedLanguage =
+      detectedResults.length > 0
+        ? detectedResults[0].detectedLanguage
+        : 'unknown';
+    const confidence =
+      detectedResults.length > 0
+        ? Math.floor(detectedResults[0].confidence * 100)
+        : 0;
+
+    const newAiResponse: AIResponseType =
+      aiResponse.type === 'translation'
+        ? {
+            id: uuidv4(),
+            role: 'ai',
+            type: 'translation',
+            content: changedText,
+            sourceLanguage: aiResponse.sourceLanguage,
+            targetLanguage: aiResponse.targetLanguage, // ✅ Required for translation
+            detectedLanguage,
+            confidence,
+            timestamp
+          }
+        : {
+            id: uuidv4(),
+            role: 'ai',
+            type: 'summary',
+            content: changedText,
+            sourceLanguage: aiResponse.sourceLanguage,
+            detectedLanguage,
+            confidence,
+            timestamp
+          };
+
+    // Add AI response to the user's message's aiResponses array
+    message.aiResponses.push(newAiResponse);
+
+    // Save updated chat history
+    saveChatHistory(chatHistory);
+  } catch (error) {
+    console.error('Error processing AI response:', error);
   }
-
-  // Detect language of AI response
-  const detectedResult = await detectLanguage(changedText);
-
-  const detectedLanguage =
-    detectedResult.length > 0 ? detectedResult[0].detectedLanguage : 'unknown';
-  const confidence =
-    detectedResult.length > 0
-      ? Math.floor(detectedResult[0].confidence * 100)
-      : 0;
-
-  // Create AI response object
-  const newAiResponse = {
-    id: uuidv4(),
-    type: aiResponse.type,
-    content: changedText,
-    sourceLanguage: aiResponse.sourceLanguage,
-    targetLanguage:
-      aiResponse.type === 'translation' ? aiResponse.targetLanguage : null,
-    detectedLanguage,
-    role: 'ai',
-    confidence,
-    timestamp
-  };
-
-  message.aiResponses.push(newAiResponse);
-  saveChatHistory(chatHistory);
 }
